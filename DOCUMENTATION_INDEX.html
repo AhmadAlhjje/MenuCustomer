@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Customer App - Documentation Index</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #3A86FF;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #6B7280;
+            font-size: 1.1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 1rem;
+        }
+
+        .icon-primary {
+            background: #3A86FF;
+        }
+
+        .icon-secondary {
+            background: #6C63FF;
+        }
+
+        .icon-accent {
+            background: #FFBE0B;
+        }
+
+        .icon-success {
+            background: #16A34A;
+        }
+
+        h3 {
+            color: #0F172A;
+            font-size: 1.3rem;
+        }
+
+        p {
+            color: #6B7280;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .link {
+            display: inline-block;
+            background: #3A86FF;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .link:hover {
+            background: #2a76ef;
+        }
+
+        .quick-links {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .quick-links h2 {
+            color: #0F172A;
+            margin-bottom: 1rem;
+        }
+
+        .quick-links ul {
+            list-style: none;
+        }
+
+        .quick-links li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #F7F8FA;
+        }
+
+        .quick-links li:last-child {
+            border-bottom: none;
+        }
+
+        .quick-links a {
+            color: #3A86FF;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .quick-links a:hover {
+            text-decoration: underline;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #16A34A;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 3rem;
+            opacity: 0.9;
+        }
+
+        code {
+            background: #F7F8FA;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍽️ Restaurant Customer App</h1>
+            <p class="subtitle">Complete Documentation Index - Next.js 14 TypeScript Project</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon icon-primary">📖</div>
+                    <h3>README.md</h3>
+                </div>
+                <p>Complete project documentation in English. Installation, features, API integration, and more.</p>
+                <a href="README.md" class="link">View Documentation</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon icon-accent">🚀</div>
+                    <h3>QUICKSTART_AR.md</h3>
+                </div>
+                <p>دليل البدء السريع باللغة العربية. خطوات التثبيت والتشغيل في 5 دقائق.</p>
+                <a href="QUICKSTART_AR.md" class="link">عرض الدليل</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon icon-secondary">⚙️</div>
+                    <h3>SETUP_GUIDE.md</h3>
+                </div>
+                <p>Detailed setup instructions, environment configuration, API integration, and troubleshooting.</p>
+                <a href="SETUP_GUIDE.md" class="link">View Guide</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon icon-success">📁</div>
+                    <h3>PROJECT_STRUCTURE.md</h3>
+                </div>
+                <p>Complete file structure overview with descriptions. ~50 files organized by Atomic Design.</p>
+                <a href="PROJECT_STRUCTURE.md" class="link">View Structure</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon icon-primary">🔄</div>
+                    <h3>USER_FLOW.md</h3>
+                </div>
+                <p>Complete user journey flow diagrams. From QR scan to order placement with API calls.</p>
+                <a href="USER_FLOW.md" class="link">View Flow</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon icon-accent">📊</div>
+                    <h3>PROJECT_SUMMARY.md</h3>
+                </div>
+                <p>Comprehensive project overview. Tech stack, features, statistics, and completion status.</p>
+                <a href="PROJECT_SUMMARY.md" class="link">View Summary</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="icon icon-secondary">💻</div>
+                    <h3>INSTALLATION_COMMANDS.txt</h3>
+                </div>
+                <p>All terminal commands needed. Copy-paste ready commands for quick setup.</p>
+                <a href="INSTALLATION_COMMANDS.txt" class="link">View Commands</a>
+            </div>
+        </div>
+
+        <div class="quick-links">
+            <h2>⚡ Quick Access</h2>
+            <ul>
+                <li>
+                    <strong>Start Development:</strong>
+                    <code>npm install && npm run dev</code>
+                </li>
+                <li>
+                    <strong>Environment Setup:</strong>
+                    Create <code>.env.local</code> with <code>NEXT_PUBLIC_API_URL=http://localhost:5000</code>
+                </li>
+                <li>
+                    <strong>Main Entry Point:</strong>
+                    <a href="src/app/page.tsx">src/app/page.tsx</a>
+                </li>
+                <li>
+                    <strong>API Types:</strong>
+                    <a href="src/api/types/index.ts">src/api/types/index.ts</a>
+                </li>
+                <li>
+                    <strong>Redux Store:</strong>
+                    <a href="src/store/index.ts">src/store/index.ts</a>
+                </li>
+                <li>
+                    <strong>Translations:</strong>
+                    <a href="src/translations/ar.json">ar.json</a> |
+                    <a href="src/translations/en.json">en.json</a>
+                </li>
+                <li>
+                    <strong>Postman Collection:</strong>
+                    <a href="../postmN.txt">postmN.txt</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="quick-links">
+            <h2>🎯 Key Features</h2>
+            <ul>
+                <li>✅ QR Code Session Start</li>
+                <li>✅ Menu Browsing (Categories & Items)</li>
+                <li>✅ Shopping Cart with Notes</li>
+                <li>✅ Order Placement</li>
+                <li>✅ Bilingual Support (Arabic RTL / English LTR)</li>
+                <li>✅ Mobile-First Responsive Design</li>
+                <li>✅ Redux State Management</li>
+                <li>✅ TypeScript Full Type Safety</li>
+                <li>✅ Atomic Design Components</li>
+                <li>✅ Custom Hooks for Reusability</li>
+            </ul>
+        </div>
+
+        <div class="quick-links">
+            <h2>🛠️ Tech Stack</h2>
+            <ul>
+                <li><strong>Framework:</strong> Next.js 14 (App Router)</li>
+                <li><strong>Language:</strong> TypeScript</li>
+                <li><strong>Styling:</strong> TailwindCSS</li>
+                <li><strong>State:</strong> Redux Toolkit</li>
+                <li><strong>i18n:</strong> react-i18next</li>
+                <li><strong>HTTP:</strong> Axios</li>
+                <li><strong>Notifications:</strong> react-hot-toast</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>🍽️ Restaurant Ordering System - Customer Frontend</p>
+            <p>Built with ❤️ using Next.js 14 & TypeScript</p>
+            <p style="margin-top: 1rem;">Open <code>localhost:3000</code> after running <code>npm run dev</code></p>
+        </div>
+    </div>
+</body>
+</html>
