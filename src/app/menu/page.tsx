@@ -4,21 +4,25 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MainLayout } from '@/components/templates/MainLayout';
 import { MenuItemCard } from '@/components/molecules/MenuItemCard';
+import { AddDishModal } from '@/components/molecules/AddDishModal';
+import { OrderList } from '@/components/organisms/OrderList';
 import { Loading } from '@/components/atoms/Loading';
 import { useI18n } from '@/hooks/useI18n';
 import { useSessionGuard } from '@/hooks/useSessionGuard';
 import { useNotification } from '@/hooks/useNotification';
 import { menuApi } from '@/api/menu';
+import { ordersApi } from '@/api/orders';
 import { Category, MenuItem } from '@/api/types';
-import { useAppDispatch } from '@/store';
-import { addToCart } from '@/store/slices/cartSlice';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { addToOrder, updateOrderItemQuantity, removeFromOrder, clearOrder } from '@/store/slices/orderSlice';
 
 export default function MenuPage() {
   const router = useRouter();
   const { t, language } = useI18n();
   const { sessionId } = useSessionGuard();
-  const { success } = useNotification();
+  const { success, error: showError } = useNotification();
   const dispatch = useAppDispatch();
+  const orderItems = useAppSelector((state) => state.order.items);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -27,6 +31,9 @@ export default function MenuPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOrderListOpen, setIsOrderListOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,9 +74,53 @@ export default function MenuPage() {
     setFilteredItems(filtered);
   }, [selectedCategory, searchQuery, items, language]);
 
-  const handleAddToCart = (item: MenuItem) => {
-    dispatch(addToCart({ item, quantity: 1 }));
-    success(t('item.addedToCart'));
+  const handleSelectDish = (item: MenuItem) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
+  const handleAddDish = (item: MenuItem, quantity: number, notes: string) => {
+    dispatch(addToOrder({ item, quantity, notes }));
+    const itemName = language === 'ar' ? item.nameAr : item.name;
+    success(t('order.addedToOrder').replace('{{item}}', itemName));
+  };
+
+  const handleUpdateQuantity = (itemId: number, quantity: number) => {
+    if (quantity <= 0) {
+      dispatch(removeFromOrder(itemId));
+    } else {
+      dispatch(updateOrderItemQuantity({ itemId, quantity }));
+    }
+  };
+
+  const handleRemoveItem = (itemId: number) => {
+    dispatch(removeFromOrder(itemId));
+  };
+
+  const handleSendToKitchen = async () => {
+    if (!sessionId) {
+      showError(t('session.sessionError'));
+      return;
+    }
+
+    try {
+      const items = orderItems.map((orderItem) => ({
+        itemId: orderItem.item.id,
+        quantity: orderItem.quantity,
+        notes: orderItem.notes || '',
+      }));
+
+      await ordersApi.createOrder({
+        sessionId: parseInt(sessionId),
+        items: items,
+      });
+
+      dispatch(clearOrder());
+      setIsOrderListOpen(false);
+      success(t('order.orderSuccess'));
+    } catch (err: any) {
+      showError(err.message || t('order.orderError'));
+    }
   };
 
   if (loading) return <MainLayout><Loading /></MainLayout>;
@@ -78,10 +129,28 @@ export default function MenuPage() {
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-text mb-2">{t('menu.title')}</h1>
-          <p className="text-text-light">{t('menu.browseMenu')}</p>
+        {/* Header with Order Button */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            {/* <h1 className="text-3xl md:text-4xl font-bold text-text mb-2">{t('menu.title')}</h1> */}
+            <p className="text-text-light">{t('menu.browseMenu')}</p>
+          </div>
+
+          {/* Order List Button */}
+          <button
+            onClick={() => setIsOrderListOpen(true)}
+            className="relative bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <span className="hidden sm:inline">{t('order.currentOrder')}</span>
+            {orderItems.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-error text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-md">
+                {orderItems.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Search Bar */}
@@ -151,13 +220,31 @@ export default function MenuPage() {
               <MenuItemCard
                 key={item.id}
                 item={item}
-                onAddToCart={() => handleAddToCart(item)}
+                onAddToCart={() => handleSelectDish(item)}
                 onViewDetails={() => router.push(`/item/${item.id}`)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Add Dish Modal */}
+      <AddDishModal
+        item={selectedItem}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddDish}
+      />
+
+      {/* Order List */}
+      <OrderList
+        items={orderItems}
+        isOpen={isOrderListOpen}
+        onClose={() => setIsOrderListOpen(false)}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onSendToKitchen={handleSendToKitchen}
+      />
 
       <style jsx global>{`
         .scrollbar-hide {

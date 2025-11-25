@@ -53,12 +53,18 @@ export interface MenuItem {
   name: string;
   nameAr: string;
   description?: string;
-  price: number;
+  price: number | string;
   image?: string;
+  images?: string;
   preparationTime?: number;
   isAvailable: boolean;
   displayOrder: number;
-  restaurantId: number;
+  restaurantId?: number;
+  category?: {
+    id: number;
+    name: string;
+    nameAr: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

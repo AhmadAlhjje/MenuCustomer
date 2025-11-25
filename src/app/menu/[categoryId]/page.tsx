@@ -12,12 +12,13 @@ import { useNotification } from '@/hooks/useNotification';
 import { menuApi } from '@/api/menu';
 import { MenuItem } from '@/api/types';
 import { useAppDispatch } from '@/store';
-import { addToCart } from '@/store/slices/cartSlice';
+import { addToOrder } from '@/store/slices/orderSlice';
+import { AddDishModal } from '@/components/molecules/AddDishModal';
 
 export default function CategoryPage() {
   const params = useParams();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { sessionId } = useSessionGuard();
   const { success } = useNotification();
   const dispatch = useAppDispatch();
@@ -25,6 +26,8 @@ export default function CategoryPage() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -44,9 +47,15 @@ export default function CategoryPage() {
     }
   }, [sessionId, params.categoryId]);
 
-  const handleAddToCart = (item: MenuItem) => {
-    dispatch(addToCart({ item, quantity: 1 }));
-    success(t('item.addedToCart'));
+  const handleSelectDish = (item: MenuItem) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
+  const handleAddDish = (item: MenuItem, quantity: number, notes: string) => {
+    dispatch(addToOrder({ item, quantity, notes }));
+    const itemName = language === 'ar' ? item.nameAr : item.name;
+    success(t('order.addedToOrder').replace('{{item}}', itemName));
   };
 
   if (loading) return <MainLayout><Loading /></MainLayout>;
@@ -70,12 +79,20 @@ export default function CategoryPage() {
             <MenuItemCard
               key={item.id}
               item={item}
-              onAddToCart={() => handleAddToCart(item)}
+              onAddToCart={() => handleSelectDish(item)}
               onViewDetails={() => router.push(`/item/${item.id}`)}
             />
           ))}
         </div>
       )}
+
+      {/* Add Dish Modal */}
+      <AddDishModal
+        item={selectedItem}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={handleAddDish}
+      />
     </MainLayout>
   );
 }

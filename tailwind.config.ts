@@ -77,6 +77,30 @@ const config: Config = {
       maxWidth: {
         '8xl': '88rem',
       },
+      animation: {
+        'fadeIn': 'fadeIn 0.2s ease-out',
+        'slideUp': 'slideUp 0.3s ease-out',
+        'slideIn': 'slideIn 0.3s ease-out',
+        'scaleIn': 'scaleIn 0.2s ease-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px) scale(0.95)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        slideIn: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        scaleIn: {
+          '0%': { opacity: '0', transform: 'scale(0.9)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+      },
     },
   },
   plugins: [],
