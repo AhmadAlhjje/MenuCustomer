@@ -26,6 +26,9 @@ export default function TablePage() {
   const handleStartSession = async () => {
     const guests = parseInt(numberOfGuests);
 
+    console.log('Starting session with guests:', guests);
+    console.log('QR Code:', params.qrCode);
+
     if (!validateNumberOfGuests(guests)) {
       setErrors(t('session.sessionError'));
       return;
@@ -36,11 +39,20 @@ export default function TablePage() {
 
     try {
       const qrCode = params.qrCode as string;
+      console.log('Calling API with:', { qrCode, numberOfGuests: guests });
+
       const session = await sessionsApi.startSession(qrCode, { numberOfGuests: guests });
+
+      console.log('Session received:', session);
+
       dispatch(setSession(session));
       success(t('session.sessionStarted'));
       router.push('/menu');
     } catch (err: any) {
+      console.error('Session start error:', err);
+      console.error('Error response:', err.response?.data);
+      console.error('Error status:', err.response?.status);
+
       error(err.response?.data?.message || t('session.sessionError'));
       setErrors(err.response?.data?.message || t('session.sessionError'));
     } finally {

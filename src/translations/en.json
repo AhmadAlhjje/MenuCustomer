@@ -19,7 +19,20 @@
     "sar": "SAR",
     "or": "OR",
     "startScanning": "Start Scanning",
-    "allowCamera": "We'll need your permission to access the camera"
+    "allowCamera": "We'll need your permission to access the camera",
+    "cameraPermissionDenied": "Camera permission denied",
+    "enableCameraInSettings": "Please enable camera access in your browser settings",
+    "noCameraFound": "No camera found",
+    "cameraAccessError": "Error accessing camera",
+    "cameraNotSupported": "Browser doesn't support camera access",
+    "cameraInUse": "Camera is being used by another application",
+    "requestingCameraAccess": "Requesting camera access...",
+    "pleaseAllowCamera": "Please allow camera access when the browser asks",
+    "requesting": "Requesting...",
+    "httpsRequired": "⚠️ Secure connection required (HTTPS)",
+    "httpsRequiredDescription": "To access the camera, the app must be opened via HTTPS or localhost. Modern browsers don't allow camera access over HTTP for security reasons.",
+    "httpsRecommended": "💡 Note: HTTPS may be required for camera access on some browsers",
+    "httpsRequiredShort": "HTTPS required for camera access"
   },
   "auth": {
     "login": "Login",
@@ -60,8 +73,11 @@
     "preparationTime": "Preparation Time",
     "minutes": "minutes",
     "unavailable": "Currently Unavailable",
-    "noItems": "No items in this category",
-    "searchPlaceholder": "Search for an item..."
+    "noItems": "No items found",
+    "searchPlaceholder": "Search for an item...",
+    "browseMenu": "Browse our special menu",
+    "allCategories": "All",
+    "tryDifferentSearch": "Try searching for something else"
   },
   "cart": {
     "title": "Shopping Cart",

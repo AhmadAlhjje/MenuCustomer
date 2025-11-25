@@ -11,8 +11,25 @@ export default function ScanQRPage() {
   const { t } = useI18n();
   const [error, setError] = useState<string>('');
   const [isScanning, setIsScanning] = useState(false);
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [cameraPermission, setCameraPermission] = useState<'prompt' | 'granted' | 'denied'>('prompt');
+  const [showHttpsWarning, setShowHttpsWarning] = useState(false);
   const scannerRef = useRef<any>(null);
   const qrReaderRef = useRef<HTMLDivElement>(null);
+
+  // Check HTTPS on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isLocalhost = window.location.hostname === 'localhost' ||
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname === '[::1]';
+      const isHttps = window.location.protocol === 'https:';
+
+      if (!isHttps && !isLocalhost) {
+        setShowHttpsWarning(true);
+      }
+    }
+  }, []);
 
   const handleScan = useCallback((data: string) => {
     try {
@@ -36,11 +53,65 @@ export default function ScanQRPage() {
     }
   }, [router, t]);
 
+  // Request camera permission
+  const requestCameraPermission = async () => {
+    setIsRequestingPermission(true);
+    setError('');
+
+    try {
+      // Check if mediaDevices API is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('MediaDevices API not supported');
+      }
+
+      console.log('Requesting camera permission...');
+
+      // Request camera access with specific constraints
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+
+      // Permission granted
+      console.log('Camera permission granted');
+      setCameraPermission('granted');
+
+      // Stop the stream immediately as we just needed to check permission
+      stream.getTracks().forEach(track => track.stop());
+
+      // Start scanning
+      setIsScanning(true);
+      setError('');
+    } catch (err: any) {
+      console.error('Camera permission error:', err);
+
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCameraPermission('denied');
+        setError(t('common.cameraPermissionDenied'));
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setError(t('common.noCameraFound'));
+      } else if (err.name === 'NotSupportedError' || err.message === 'MediaDevices API not supported') {
+        setError(t('common.cameraNotSupported'));
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        setError(t('common.cameraInUse'));
+      } else if (err.name === 'NotSupportedError' || err.message?.includes('secure')) {
+        setError(t('common.httpsRequiredShort'));
+      } else {
+        setError(t('common.cameraAccessError') + ': ' + err.message);
+      }
+    } finally {
+      setIsRequestingPermission(false);
+    }
+  };
+
   useEffect(() => {
     let html5QrCode: any = null;
 
     const startScanner = async () => {
-      if (isScanning && qrReaderRef.current) {
+      if (isScanning && qrReaderRef.current && cameraPermission === 'granted') {
         try {
           // Dynamically import html5-qrcode to avoid SSR issues
           const { Html5Qrcode } = await import('html5-qrcode');
@@ -51,10 +122,15 @@ export default function ScanQRPage() {
           const config = {
             fps: 10,
             qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+            videoConstraints: {
+              facingMode: 'environment',
+              advanced: [{ focusMode: 'continuous' }]
+            }
           };
 
           await html5QrCode.start(
-            { facingMode: 'environment' }, // Use rear camera
+            { facingMode: 'environment' }, // Use rear camera on mobile
             config,
             (decodedText: string) => {
               // Success callback
@@ -64,14 +140,23 @@ export default function ScanQRPage() {
                 html5QrCode.stop().catch((err: any) => console.error(err));
               }
             },
-            (errorMessage: string) => {
+            () => {
               // Error callback (usually just means no QR code detected)
               // Don't show error to user unless it's critical
             }
           );
-        } catch (err) {
+        } catch (err: any) {
           console.error('Error starting QR scanner:', err);
-          setError(t('common.error'));
+
+          if (err.name === 'NotAllowedError') {
+            setError(t('common.cameraPermissionDenied'));
+            setCameraPermission('denied');
+          } else if (err.name === 'NotFoundError') {
+            setError(t('common.noCameraFound'));
+          } else {
+            setError(t('common.cameraAccessError'));
+          }
+          setIsScanning(false);
         }
       }
     };
@@ -86,7 +171,7 @@ export default function ScanQRPage() {
           .catch((err: any) => console.error('Error stopping scanner:', err));
       }
     };
-  }, [isScanning, handleScan, t]);
+  }, [isScanning, handleScan, t, cameraPermission]);
 
   const handleStopScanning = () => {
     if (scannerRef.current) {
@@ -132,15 +217,59 @@ export default function ScanQRPage() {
                   />
                 </svg>
                 <p className="text-muted mb-2">{t('session.scanQR')}</p>
-                <p className="text-sm text-muted">{t('common.allowCamera')}</p>
+                <p className="text-sm text-muted mb-4">{t('common.allowCamera')}</p>
+
+                {showHttpsWarning && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      <div>
+                        <p className="text-xs text-blue-700">
+                          {t('common.httpsRecommended')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {isRequestingPermission && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-600">
+                      {t('common.requestingCameraAccess')}
+                    </p>
+                    <p className="text-xs text-blue-500 mt-1">
+                      {t('common.pleaseAllowCamera')}
+                    </p>
+                  </div>
+                )}
+
+                {cameraPermission === 'denied' && !isRequestingPermission && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">
+                      {t('common.cameraPermissionDenied')}
+                    </p>
+                    <p className="text-xs text-red-500 mt-1">
+                      {t('common.enableCameraInSettings')}
+                    </p>
+                  </div>
+                )}
+
+                {error && !isRequestingPermission && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
               </div>
               <Button
                 variant="primary"
                 size="lg"
-                onClick={() => setIsScanning(true)}
+                onClick={requestCameraPermission}
                 fullWidth
+                disabled={isRequestingPermission}
               >
-                {t('common.startScanning')}
+                {isRequestingPermission ? t('common.requesting') : t('common.startScanning')}
               </Button>
             </div>
           ) : (
@@ -152,7 +281,9 @@ export default function ScanQRPage() {
               ></div>
 
               {error && (
-                <p className="text-error text-center mb-4">{error}</p>
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 text-center">{error}</p>
+                </div>
               )}
 
               <Button
