@@ -15,6 +15,8 @@ import { ordersApi } from '@/api/orders';
 import { Category, MenuItem } from '@/api/types';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { addToOrder, updateOrderItemQuantity, removeFromOrder, clearOrder } from '@/store/slices/orderSlice';
+import { clearSession } from '@/store/slices/sessionSlice';
+import { storage } from '@/utils/storage';
 
 export default function MenuPage() {
   const router = useRouter();
@@ -123,6 +125,13 @@ export default function MenuPage() {
     }
   };
 
+  const handleEndSession = () => {
+    dispatch(clearSession());
+    storage.clearSession();
+    success(t('session.sessionEnded') || 'تم إنهاء الجلسة بنجاح');
+    router.push('/');
+  };
+
   if (loading) return <MainLayout><Loading /></MainLayout>;
   if (error) return <MainLayout><div className="text-error p-4 text-center">{error}</div></MainLayout>;
 
@@ -130,27 +139,41 @@ export default function MenuPage() {
     <MainLayout>
       <div className="max-w-7xl mx-auto">
         {/* Header with Order Button */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between gap-4">
           <div>
             {/* <h1 className="text-3xl md:text-4xl font-bold text-text mb-2">{t('menu.title')}</h1> */}
             <p className="text-text-light">{t('menu.browseMenu')}</p>
           </div>
 
-          {/* Order List Button */}
-          <button
-            onClick={() => setIsOrderListOpen(true)}
-            className="relative bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <span className="hidden sm:inline">{t('order.currentOrder')}</span>
-            {orderItems.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-error text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-md">
-                {orderItems.length}
-              </span>
-            )}
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Order List Button */}
+            <button
+              onClick={() => setIsOrderListOpen(true)}
+              className="relative bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span className="hidden sm:inline">{t('order.currentOrder')}</span>
+              {orderItems.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-error text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-md">
+                  {orderItems.length}
+                </span>
+              )}
+            </button>
+
+            {/* End Session Button */}
+            <button
+              onClick={handleEndSession}
+              className="bg-error hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+              title={t('session.endSession') || 'إنهاء الجلسة'}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="hidden sm:inline">{t('session.endSession') || 'إنهاء'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Search Bar */}

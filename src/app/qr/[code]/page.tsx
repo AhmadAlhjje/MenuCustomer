@@ -11,6 +11,7 @@ import { sessionsApi } from '@/api/sessions';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setSession, loadSessionFromStorage } from '@/store/slices/sessionSlice';
 import { validateNumberOfGuests } from '@/utils/validators';
+import { storage } from '@/utils/storage';
 
 export default function QRCodePage() {
   const params = useParams();
@@ -54,6 +55,18 @@ export default function QRCodePage() {
     setErrors('');
 
     try {
+      // Check if there's an existing session and if it has expired
+      const existingSessionData = storage.getSession();
+      if (existingSessionData) {
+        const sessionAgeHours = storage.getSessionAgeHours();
+        console.log(`[QRCodePage] Existing session found, age: ${sessionAgeHours.toFixed(2)} hours`);
+
+        if (sessionAgeHours > 10) {
+          console.log('[QRCodePage] Session expired (>10 hours), clearing old session');
+          storage.clearSession();
+        }
+      }
+
       const qrCode = params.code as string;
       console.log('Calling API with:', { qrCode, numberOfGuests: guests });
 

@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Session } from '@/api/types';
+import { storage } from '@/utils/storage';
 
 interface SessionState {
   session: Session | null;
@@ -19,21 +20,29 @@ const sessionSlice = createSlice({
       state.session = action.payload;
       state.sessionId = action.payload.id;
       if (typeof window !== 'undefined') {
-        localStorage.setItem('sessionId', action.payload.id.toString());
+        // Store both sessionId and createdAt timestamp
+        storage.setSession(action.payload.id);
       }
     },
     clearSession: (state) => {
       state.session = null;
       state.sessionId = null;
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('sessionId');
+        storage.clearSession();
       }
     },
     loadSessionFromStorage: (state) => {
       if (typeof window !== 'undefined') {
-        const sessionId = localStorage.getItem('sessionId');
-        if (sessionId) {
-          state.sessionId = parseInt(sessionId, 10);
+        // Check if session has expired
+        if (storage.isSessionExpired()) {
+          storage.clearSession();
+          state.sessionId = null;
+          state.session = null;
+        } else {
+          const sessionData = storage.getSession();
+          if (sessionData) {
+            state.sessionId = sessionData.sessionId;
+          }
         }
       }
     },
