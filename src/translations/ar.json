@@ -61,7 +61,9 @@
     "sessionError": "فشل بدء الجلسة",
     "invalidQR": "رمز QR غير صحيح",
     "orEnterManually": "أو أدخل الرمز يدوياً",
-    "useDemo": "استخدام النسخة التجريبية"
+    "useDemo": "استخدام النسخة التجريبية",
+    "endSession": "إنهاء الجلسة",
+    "sessionEnded": "تم إنهاء الجلسة بنجاح"
   },
   "menu": {
     "title": "القائمة",

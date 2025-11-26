@@ -295,20 +295,6 @@ export default function ScanQRPage() {
               </Button>
             </>
           )}
-
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-sm text-muted text-center mb-2">
-              {t('session.orEnterManually')}
-            </p>
-            <Button
-              variant="accent"
-              size="sm"
-              onClick={() => router.push('/table/QR-1-T1-demo')}
-              fullWidth
-            >
-              {t('session.useDemo')}
-            </Button>
-          </div>
         </div>
 
         <div className="mt-6 text-center">

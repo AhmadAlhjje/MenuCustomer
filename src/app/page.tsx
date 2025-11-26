@@ -47,26 +47,6 @@ export default function HomePage() {
 
         <div className="w-full max-w-md space-y-4">
           <QRScannerButton />
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-background text-muted">
-                {t('common.or')}
-              </span>
-            </div>
-          </div>
-
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={() => router.push('/table/QR-1-T1-demo')}
-            fullWidth
-          >
-            {t('session.useDemo')}
-          </Button>
         </div>
       </div>
     </MainLayout>

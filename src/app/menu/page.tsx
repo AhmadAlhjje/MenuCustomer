@@ -137,43 +137,25 @@ export default function MenuPage() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto">
-        {/* Header with Order Button */}
+      <div className="max-w-7xl mx-auto pb-24">
+        {/* Header */}
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
             {/* <h1 className="text-3xl md:text-4xl font-bold text-text mb-2">{t('menu.title')}</h1> */}
             <p className="text-text-light">{t('menu.browseMenu')}</p>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Order List Button */}
-            <button
-              onClick={() => setIsOrderListOpen(true)}
-              className="relative bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <span className="hidden sm:inline">{t('order.currentOrder')}</span>
-              {orderItems.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-error text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-md">
-                  {orderItems.length}
-                </span>
-              )}
-            </button>
-
-            {/* End Session Button */}
-            <button
-              onClick={handleEndSession}
-              className="bg-error hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
-              title={t('session.endSession') || 'إنهاء الجلسة'}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span className="hidden sm:inline">{t('session.endSession') || 'إنهاء'}</span>
-            </button>
-          </div>
+          {/* End Session Button */}
+          <button
+            onClick={handleEndSession}
+            className="bg-error hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+            title={t('session.endSession') || 'إنهاء الجلسة'}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span className="hidden sm:inline">{t('session.endSession') || 'إنهاء'}</span>
+          </button>
         </div>
 
         {/* Search Bar */}
@@ -269,6 +251,24 @@ export default function MenuPage() {
         onSendToKitchen={handleSendToKitchen}
       />
 
+      {/* Floating Order Button */}
+      {orderItems.length > 0 && (
+        <button
+          onClick={() => setIsOrderListOpen(true)}
+          className="fixed bottom-6 right-6 left-6 sm:left-auto sm:right-6 sm:w-auto bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-semibold shadow-2xl transition-all hover:scale-105 flex items-center justify-center sm:justify-start gap-3 z-40 animate-bounce"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+          </svg>
+          <span className="flex items-center gap-2">
+            <span>{t('order.currentOrder')}</span>
+            <span className="bg-error text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+              {orderItems.length}
+            </span>
+          </span>
+        </button>
+      )}
+
       <style jsx global>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
@@ -276,6 +276,17 @@ export default function MenuPage() {
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        @keyframes bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-0.5rem);
+          }
+        }
+        .animate-bounce {
+          animation: bounce 2s infinite;
         }
       `}</style>
     </MainLayout>

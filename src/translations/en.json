@@ -61,7 +61,9 @@
     "sessionError": "Failed to start session",
     "invalidQR": "Invalid QR code",
     "orEnterManually": "Or enter code manually",
-    "useDemo": "Use Demo Version"
+    "useDemo": "Use Demo Version",
+    "endSession": "End Session",
+    "sessionEnded": "Session ended successfully"
   },
   "menu": {
     "title": "Menu",
