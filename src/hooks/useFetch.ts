@@ -8,8 +8,7 @@ interface UseFetchState<T> {
 }
 
 export const useFetch = <T>(
-  fetcher: () => Promise<T>,
-  dependencies: any[] = []
+  fetcher: () => Promise<T>
 ): UseFetchState<T> & { refetch: () => void } => {
   const [state, setState] = useState<UseFetchState<T>>({
     data: null,
@@ -34,7 +33,7 @@ export const useFetch = <T>(
 
   useEffect(() => {
     fetchData();
-  }, dependencies);
+  }, [fetchData]);
 
   return { ...state, refetch: fetchData };
 };

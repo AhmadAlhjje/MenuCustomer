@@ -111,7 +111,7 @@ export default function MenuPage() {
       }));
 
       await ordersApi.createOrder({
-        sessionId: parseInt(sessionId),
+        sessionId: typeof sessionId === 'string' ? parseInt(sessionId, 10) : sessionId,
         items: items,
       });
 
