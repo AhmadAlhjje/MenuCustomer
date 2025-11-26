@@ -1,19 +1,19 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/store';
+import { useAppSelector, useAppDispatch } from '@/store';
+import { loadSessionFromStorage } from '@/store/slices/sessionSlice';
 
 export const useSessionGuard = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const sessionId = useAppSelector((state) => state.session.sessionId);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!sessionId && typeof window !== 'undefined') {
-      const storedSessionId = localStorage.getItem('sessionId');
-      // if (!storedSessionId) {
-      //   router.push('/');
-      // }
-    }
-  }, [sessionId, router]);
+    // Load from localStorage on mount
+    dispatch(loadSessionFromStorage());
+    setIsInitialized(true);
+  }, [dispatch]);
 
-  return { sessionId, hasSession: !!sessionId };
+  return { sessionId, hasSession: !!sessionId, isInitialized };
 };
