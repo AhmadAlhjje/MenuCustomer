@@ -68,7 +68,20 @@ const config: Config = {
         'xl': '20px',
       },
       fontFamily: {
-        sans: ['Inter', 'Cairo', '-apple-system', 'system-ui', 'sans-serif'],
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'Roboto',
+          'Oxygen',
+          'Ubuntu',
+          'Cantarell',
+          'Fira Sans',
+          'Droid Sans',
+          'Helvetica Neue',
+          'Arial',
+          'sans-serif',
+        ],
       },
       spacing: {
         '18': '4.5rem',
