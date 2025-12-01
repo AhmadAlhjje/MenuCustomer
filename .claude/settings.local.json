@@ -13,7 +13,8 @@
       "Bash(node -e:*)",
       "Bash(ipconfig:*)",
       "Bash(findstr:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(dir /B)"
     ],
     "deny": [],
     "ask": []
