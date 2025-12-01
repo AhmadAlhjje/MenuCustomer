@@ -1,18 +1,29 @@
 import apiClient from './client';
 import { CreateOrderRequest, CreateOrderResponse, Order } from './types';
+import { initializeSocket } from '@/lib/socket';
 
 export const ordersApi = {
   createOrder: async (data: CreateOrderRequest): Promise<Order> => {
-    const response = await apiClient.post<any>('/api/orders', data);
-    console.log('Create Order API Response:', response.data);
+    // Use Socket.IO to send order instead of HTTP
+    const socket = initializeSocket();
 
-    // Handle different response formats
-    if (response.data.data && response.data.data.order) {
-      return response.data.data.order;
-    } else if (response.data.order) {
-      return response.data.order;
-    }
-    return response.data;
+    return new Promise((resolve, reject) => {
+      // Emit order via socket
+      socket.emit('create-order', data, (response: any) => {
+        console.log('Create Order Socket Response:', response);
+
+        if (response.success) {
+          resolve(response.data);
+        } else {
+          reject(new Error(response.message || 'فشل إرسال الطلب'));
+        }
+      });
+
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        reject(new Error('انتهت مهلة إرسال الطلب'));
+      }, 10000);
+    });
   },
 
   getOrdersBySession: async (sessionId: number): Promise<Order[]> => {
