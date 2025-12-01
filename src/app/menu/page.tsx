@@ -255,7 +255,7 @@ export default function MenuPage() {
       {orderItems.length > 0 && (
         <button
           onClick={() => setIsOrderListOpen(true)}
-          className="fixed bottom-6 right-6 left-6 sm:left-auto sm:right-6 sm:w-auto bg-primary hover:bg-primary-dark text-white px-6 py-4 rounded-xl font-semibold shadow-2xl transition-all hover:scale-105 flex items-center justify-center sm:justify-start gap-3 z-40 animate-bounce"
+          className="fixed bottom-6 right-6 left-6 sm:left-auto sm:right-6 sm:w-auto bg-error hover:bg-red-600 text-white px-6 py-4 rounded-xl font-semibold shadow-2xl transition-all hover:scale-105 flex items-center justify-center sm:justify-start gap-3 z-40 animate-bounce"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

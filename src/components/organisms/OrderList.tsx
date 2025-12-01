@@ -182,7 +182,7 @@ export const OrderList: React.FC<OrderListProps> = ({
 
                       {/* Notes */}
                       {orderItem.notes && (
-                        <div className="mt-2 text-xs text-text-light bg-gray-50 p-2 rounded-md border border-gray-200">
+                        <div className="mt-2 text-xs text-text-light bg-gray-50 p-2 rounded-md border border-gray-200 max-h-24 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                           <span className="font-semibold">{t('order.notes')}:</span> {orderItem.notes}
                         </div>
                       )}
@@ -260,6 +260,21 @@ export const OrderList: React.FC<OrderListProps> = ({
         }
         .animate-slideIn {
           animation: slideIn 0.3s ease-out;
+        }
+        /* Custom scrollbar styles for notes */
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 6px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: #f3f4f6;
+          border-radius: 3px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 3px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
         }
       `}</style>
     </>
