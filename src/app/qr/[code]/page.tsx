@@ -43,8 +43,9 @@ export default function QRCodePage() {
   const handleStartSession = async () => {
     const guests = parseInt(numberOfGuests);
 
-    console.log('Starting session with guests:', guests);
-    console.log('QR Code:', params.code);
+    console.log('[QRCodePage] Starting session with guests:', guests);
+    console.log('[QRCodePage] QR Code:', params.code);
+    console.log('[QRCodePage] API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
 
     if (!validateNumberOfGuests(guests)) {
       setErrors(t('session.sessionError'));
@@ -68,11 +69,11 @@ export default function QRCodePage() {
       }
 
       const qrCode = params.code as string;
-      console.log('Calling API with:', { qrCode, numberOfGuests: guests });
+      console.log('[QRCodePage] Calling API with:', { qrCode, numberOfGuests: guests });
 
       const session = await sessionsApi.startSession(qrCode, { numberOfGuests: guests });
 
-      console.log('Session received:', session);
+      console.log('[QRCodePage] Session received:', session);
 
       dispatch(setSession(session));
       success(t('session.sessionStarted'));
@@ -85,12 +86,25 @@ export default function QRCodePage() {
         router.push('/menu');
       }, 500);
     } catch (err: any) {
-      console.error('Session start error:', err);
-      console.error('Error response:', err.response?.data);
-      console.error('Error status:', err.response?.status);
+      console.error('[QRCodePage] Session start error:', err);
+      console.error('[QRCodePage] Error response:', err.response?.data);
+      console.error('[QRCodePage] Error status:', err.response?.status);
+      console.error('[QRCodePage] Error message:', err.message);
 
-      error(err.response?.data?.message || t('session.sessionError'));
-      setErrors(err.response?.data?.message || t('session.sessionError'));
+      // تحديد رسالة الخطأ بناءً على نوع الخطأ
+      let errorMessage = t('session.sessionError');
+      if (err.code === 'ECONNREFUSED') {
+        errorMessage = 'لا يمكن الاتصال بالخادم. تأكد من أن الخادم يعمل على ' + process.env.NEXT_PUBLIC_API_BASE_URL;
+      } else if (err.response?.status === 404) {
+        errorMessage = 'كود QR غير صحيح أو انتهت صلاحيته';
+      } else if (err.response?.status === 400) {
+        errorMessage = err.response?.data?.message || 'بيانات غير صحيحة';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      error(errorMessage);
+      setErrors(errorMessage);
       setLoading(false);
     }
   };
