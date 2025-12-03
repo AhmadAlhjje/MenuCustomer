@@ -39,22 +39,45 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
     if (!socket) return;
 
     const handleNewOrder = (data: any) => {
-      const newOrder: OrderWithTimer = {
-        ...data.order,
-        preparationTime: data.preparationTime || 0,
-        remainingTime: data.preparationTime || 0,
-      };
-      setOrders((prev) => [...prev, newOrder]);
+      // Only add orders that are in preparing or delivered status
+      if (data.order.status === 'preparing' || data.order.status === 'delivered') {
+        const newOrder: OrderWithTimer = {
+          ...data.order,
+          preparationTime: data.preparationTime || 0,
+          remainingTime: data.preparationTime || 0,
+        };
+        setOrders((prev) => [...prev, newOrder]);
+      }
     };
 
     const handleOrderStatusUpdate = (data: any) => {
-      setOrders((prev) =>
-        prev.map((order) =>
-          order.id === data.order.id
-            ? { ...order, status: data.order.status }
-            : order
-        )
-      );
+      // If status becomes preparing or delivered, add/update the order
+      // If status is new, remove it from the list
+      if (data.order.status === 'preparing' || data.order.status === 'delivered') {
+        setOrders((prev) => {
+          const exists = prev.find((order) => order.id === data.order.id);
+          if (exists) {
+            return prev.map((order) =>
+              order.id === data.order.id
+                ? { ...order, status: data.order.status }
+                : order
+            );
+          } else {
+            // Add new order if not exists
+            return [
+              ...prev,
+              {
+                ...data.order,
+                preparationTime: data.preparationTime || 0,
+                remainingTime: data.preparationTime || 0,
+              },
+            ];
+          }
+        });
+      } else {
+        // Remove from list if status is 'new'
+        setOrders((prev) => prev.filter((order) => order.id !== data.order.id));
+      }
     };
 
     socket.on('customer-order-created', handleNewOrder);
@@ -97,7 +120,12 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
       const data = await response.json();
 
       if (data.data?.orders) {
-        const ordersWithTimer: OrderWithTimer[] = data.data.orders.map(
+        // Filter orders to show only preparing or delivered
+        const filteredOrders = data.data.orders.filter(
+          (order: any) => order.status === 'preparing' || order.status === 'delivered'
+        );
+
+        const ordersWithTimer: OrderWithTimer[] = filteredOrders.map(
           (order: any) => ({
             ...order,
             preparationTime: order.items?.[0]?.item?.preparationTime || 0,

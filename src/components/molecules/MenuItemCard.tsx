@@ -19,11 +19,14 @@ const getItemImages = (item: MenuItem): string[] => {
       return item.images;
     }
     // إذا كانت string تحتاج parsing
-    try {
-      const parsed = JSON.parse(item.images as string);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
+    if (typeof item.images === 'string') {
+      try {
+        const parsed = JSON.parse(item.images);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        // إذا فشل parsing، حاول استخدام القيمة مباشرة
+        return item.images ? [item.images] : [];
+      }
     }
   }
   if (item.image) {
