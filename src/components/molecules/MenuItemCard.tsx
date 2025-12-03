@@ -14,8 +14,13 @@ interface MenuItemCardProps {
 // دالة مساعدة لاستخراج الصور
 const getItemImages = (item: MenuItem): string[] => {
   if (item.images) {
+    // إذا كانت images مصفوفة جاهزة
+    if (Array.isArray(item.images)) {
+      return item.images;
+    }
+    // إذا كانت string تحتاج parsing
     try {
-      const parsed = JSON.parse(item.images);
+      const parsed = JSON.parse(item.images as string);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
@@ -40,7 +45,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
   onAddToCart,
   onViewDetails,
 }) => {
-  const { t, isRTL, language } = useI18n();
+  const { t, language } = useI18n();
   const images = getItemImages(item);
   const mainImage = images.length > 0 ? getImageUrl(images[0]) : null;
 

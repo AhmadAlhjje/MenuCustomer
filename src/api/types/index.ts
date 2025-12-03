@@ -55,7 +55,7 @@ export interface MenuItem {
   description?: string;
   price: number | string;
   image?: string;
-  images?: string;
+  images?: string | string[]; // يمكن أن تكون string أو array
   preparationTime?: number;
   isAvailable: boolean;
   displayOrder: number;
