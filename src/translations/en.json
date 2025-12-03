@@ -86,7 +86,10 @@
   "order": {
     "title": "Order List",
     "currentOrder": "Your Current Order",
+    "myOrders": "My Orders",
     "empty": "No dishes in your order",
+    "noOrders": "No orders yet",
+    "startOrdering": "Start ordering items",
     "quantity": "Quantity",
     "notes": "Notes",
     "itemNotes": "Dish notes",
@@ -104,7 +107,13 @@
     "quantityLabel": "Select Quantity",
     "notesLabel": "Additional Notes",
     "addedToOrder": "Dish added to order",
-    "itemAdded": "{{item}} added to order"
+    "itemAdded": "{{item}} added to order",
+    "new": "New",
+    "preparing": "Preparing",
+    "delivered": "Ready",
+    "processing": "Processing",
+    "estimatedTime": "Estimated Time",
+    "ready": "Ready for pickup"
   },
   "item": {
     "details": "Dish Details",

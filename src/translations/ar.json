@@ -86,7 +86,10 @@
   "order": {
     "title": "قائمة الطلب",
     "currentOrder": "طلبك الحالي",
+    "myOrders": "طلباتي",
     "empty": "لا توجد أطباق في الطلب",
+    "noOrders": "لا توجد طلبات حتى الآن",
+    "startOrdering": "ابدأ بطلب أصناف",
     "quantity": "الكمية",
     "notes": "ملاحظات",
     "itemNotes": "ملاحظات خاصة بالطبق",
@@ -104,7 +107,13 @@
     "quantityLabel": "اختر الكمية",
     "notesLabel": "ملاحظات إضافية",
     "addedToOrder": "تمت إضافة الطبق للطلب",
-    "itemAdded": "تم إضافة {{item}} للطلب"
+    "itemAdded": "تم إضافة {{item}} للطلب",
+    "new": "جديد",
+    "preparing": "قيد التحضير",
+    "delivered": "جاهز",
+    "processing": "قيد المعالجة",
+    "estimatedTime": "الوقت المتبقي",
+    "ready": "جاهز للاستلام"
   },
   "item": {
     "details": "تفاصيل الطبق",

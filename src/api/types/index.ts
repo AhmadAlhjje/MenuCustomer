@@ -122,6 +122,8 @@ export interface OrderItemDetail {
   price: number;
   notes?: string;
   item?: MenuItem;
+  unitPrice?: string | number;
+  subtotal?: string | number;
 }
 
 export interface CreateOrderResponse {

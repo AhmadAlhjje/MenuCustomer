@@ -24,60 +24,79 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
 }) => {
   const { t, language } = useI18n();
   const [orders, setOrders] = useState<OrderWithTimer[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  // Fetch orders on mount
+  // Fetch initial orders and join session
   useEffect(() => {
-    if (isOpen && sessionId) {
-      fetchOrders();
-    }
-  }, [isOpen, sessionId]);
+    const fetchInitialOrders = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${baseUrl}/api/orders/session/${sessionId}/summary`);
+        const data = await response.json();
 
-  // Setup socket listeners
-  useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
+        console.log('[CustomerOrders] Received initial orders:', data);
 
-    const handleNewOrder = (data: any) => {
-      // Only add orders that are in preparing or delivered status
-      if (data.order.status === 'preparing' || data.order.status === 'delivered') {
-        const newOrder: OrderWithTimer = {
-          ...data.order,
-          preparationTime: data.preparationTime || 0,
-          remainingTime: data.preparationTime || 0,
-        };
-        setOrders((prev) => [...prev, newOrder]);
+        if (data.success && data.data?.orders) {
+          const ordersWithTimer = data.data.orders.map((order: any) => {
+            // Handle both 'items' and 'orderItems' property names
+            const items = order.items || order.orderItems || [];
+            return {
+              ...order,
+              items: items, // Normalize to 'items'
+              preparationTime: items?.[0]?.item?.preparationTime || 0,
+              remainingTime: items?.[0]?.item?.preparationTime || 0,
+            };
+          });
+          console.log('[CustomerOrders] Setting orders:', ordersWithTimer);
+          setOrders(ordersWithTimer);
+        }
+      } catch (error) {
+        console.error('[CustomerOrders] Error fetching initial orders:', error);
       }
     };
 
+    if (!isOpen || !sessionId) return;
+
+    // Fetch initial orders
+    fetchInitialOrders();
+
+    // Setup socket listeners
+    const socket = getSocket();
+    if (!socket) return;
+
+    // Join customer session room
+    socket.emit('join-customer-session', sessionId);
+    console.log('[CustomerOrders] Joined session:', sessionId);
+
+    const handleNewOrder = (data: any) => {
+      // Add all new orders (regardless of status)
+      console.log('[CustomerOrders] New order received:', data);
+      const newOrder: OrderWithTimer = {
+        ...data.order,
+        preparationTime: data.order.items?.[0]?.item?.preparationTime || 0,
+        remainingTime: data.order.items?.[0]?.item?.preparationTime || 0,
+      };
+      setOrders((prev) => [...prev, newOrder]);
+    };
+
     const handleOrderStatusUpdate = (data: any) => {
-      // If status becomes preparing or delivered, add/update the order
-      // If status is new, remove it from the list
-      if (data.order.status === 'preparing' || data.order.status === 'delivered') {
-        setOrders((prev) => {
-          const exists = prev.find((order) => order.id === data.order.id);
-          if (exists) {
-            return prev.map((order) =>
-              order.id === data.order.id
-                ? { ...order, status: data.order.status }
-                : order
-            );
-          } else {
-            // Add new order if not exists
-            return [
-              ...prev,
-              {
-                ...data.order,
-                preparationTime: data.preparationTime || 0,
-                remainingTime: data.preparationTime || 0,
-              },
-            ];
-          }
-        });
-      } else {
-        // Remove from list if status is 'new'
-        setOrders((prev) => prev.filter((order) => order.id !== data.order.id));
-      }
+      // Update order status
+      console.log('[CustomerOrders] Order status updated:', data);
+      setOrders((prev) => {
+        const exists = prev.find((order) => order.id === data.order.id);
+        if (exists) {
+          return prev.map((order) =>
+            order.id === data.order.id
+              ? {
+                  ...order,
+                  status: data.order.status,
+                  preparationTime: order.preparationTime,
+                  remainingTime: data.order.status === 'preparing' ? order.preparationTime : order.remainingTime,
+                }
+              : order
+          );
+        }
+        return prev;
+      });
     };
 
     socket.on('customer-order-created', handleNewOrder);
@@ -86,8 +105,9 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
     return () => {
       socket.off('customer-order-created', handleNewOrder);
       socket.off('customer-order-status-updated', handleOrderStatusUpdate);
+      socket.emit('leave-customer-session', sessionId);
     };
-  }, []);
+  }, [isOpen, sessionId]);
 
   // Timer effect
   useEffect(() => {
@@ -111,35 +131,6 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
     return () => clearInterval(interval);
   }, [isOpen]);
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/orders/session/${sessionId}/summary`
-      );
-      const data = await response.json();
-
-      if (data.data?.orders) {
-        // Filter orders to show only preparing or delivered
-        const filteredOrders = data.data.orders.filter(
-          (order: any) => order.status === 'preparing' || order.status === 'delivered'
-        );
-
-        const ordersWithTimer: OrderWithTimer[] = filteredOrders.map(
-          (order: any) => ({
-            ...order,
-            preparationTime: order.items?.[0]?.item?.preparationTime || 0,
-            remainingTime: order.items?.[0]?.item?.preparationTime || 0,
-          })
-        );
-        setOrders(ordersWithTimer);
-      }
-    } catch (error) {
-      console.error('Failed to fetch orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -214,13 +205,7 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
 
         {/* Orders List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {loading && (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            </div>
-          )}
-
-          {!loading && orders.length === 0 && (
+          {orders.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 <svg
@@ -244,8 +229,7 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
             </div>
           )}
 
-          {!loading &&
-            orders.map((order) => (
+          {orders.map((order) => (
               <div
                 key={order.id}
                 className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
@@ -253,9 +237,16 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
                 {/* Order Header */}
                 <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-text-light">
-                      #{order.id}
-                    </span>
+                    <div>
+                      <span className="text-sm font-semibold text-text-light">
+                        #{order.id}
+                      </span>
+                      {order.status === 'preparing' && order.remainingTime !== undefined && (
+                        <div className="mt-1 text-lg font-bold text-yellow-600">
+                          {formatTime(order.remainingTime)}
+                        </div>
+                      )}
+                    </div>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(
                         order.status
@@ -279,12 +270,16 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
                         </p>
                         {item.notes && (
                           <p className="text-text-muted text-xs mt-1 italic">
-                            "{item.notes}"
+                            &quot;{item.notes}&quot;
                           </p>
                         )}
                       </div>
                       <span className="font-bold text-primary ml-2">
-                        {formatCurrency(item.price * item.quantity)}
+                        {formatCurrency(
+                          typeof item.subtotal === 'string'
+                            ? parseFloat(item.subtotal)
+                            : item.subtotal || (item.price * item.quantity)
+                        )}
                       </span>
                     </div>
                   ))}
@@ -345,7 +340,7 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
                   </div>
                 </div>
               </div>
-            ))}
+          ))}
         </div>
       </div>
 

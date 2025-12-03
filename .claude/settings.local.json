@@ -14,7 +14,8 @@
       "Bash(ipconfig:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
-      "Bash(dir /B)"
+      "Bash(dir /B)",
+      "Bash(docker build:*)"
     ],
     "deny": [],
     "ask": []
