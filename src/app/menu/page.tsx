@@ -6,6 +6,7 @@ import { MainLayout } from '@/components/templates/MainLayout';
 import { MenuItemCard } from '@/components/molecules/MenuItemCard';
 import { AddDishModal } from '@/components/molecules/AddDishModal';
 import { OrderList } from '@/components/organisms/OrderList';
+import { CustomerOrders } from '@/components/organisms/CustomerOrders';
 import { Loading } from '@/components/atoms/Loading';
 import { useI18n } from '@/hooks/useI18n';
 import { useSessionGuard } from '@/hooks/useSessionGuard';
@@ -36,6 +37,7 @@ export default function MenuPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOrderListOpen, setIsOrderListOpen] = useState(false);
+  const [isCustomerOrdersOpen, setIsCustomerOrdersOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -145,17 +147,32 @@ export default function MenuPage() {
             <p className="text-text-light">{t('menu.browseMenu')}</p>
           </div>
 
-          {/* End Session Button */}
-          <button
-            onClick={handleEndSession}
-            className="bg-error hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
-            title={t('session.endSession') || 'إنهاء الجلسة'}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span className="hidden sm:inline">{t('session.endSession') || 'إنهاء'}</span>
-          </button>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3">
+            {/* Customer Orders Button */}
+            <button
+              onClick={() => setIsCustomerOrdersOpen(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+              title={t('order.myOrders') || 'طلباتي'}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+              <span className="hidden sm:inline">{t('order.myOrders') || 'طلباتي'}</span>
+            </button>
+
+            {/* End Session Button */}
+            <button
+              onClick={handleEndSession}
+              className="bg-error hover:bg-red-600 text-white px-4 py-3 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 flex items-center gap-2"
+              title={t('session.endSession') || 'إنهاء الجلسة'}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              <span className="hidden sm:inline">{t('session.endSession') || 'إنهاء'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -250,6 +267,15 @@ export default function MenuPage() {
         onRemoveItem={handleRemoveItem}
         onSendToKitchen={handleSendToKitchen}
       />
+
+      {/* Customer Orders */}
+      {sessionId && (
+        <CustomerOrders
+          sessionId={typeof sessionId === 'string' ? parseInt(sessionId, 10) : sessionId}
+          isOpen={isCustomerOrdersOpen}
+          onClose={() => setIsCustomerOrdersOpen(false)}
+        />
+      )}
 
       {/* Floating Order Button */}
       {orderItems.length > 0 && (
