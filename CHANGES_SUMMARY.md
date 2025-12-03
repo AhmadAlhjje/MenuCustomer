@@ -22,16 +22,12 @@
 **قبل:**
 ```javascript
 socket.on('connect_error', (error) => {
-  console.error('❌ Customer Socket connection error:', error);
 });
 ```
 
 **بعد:**
 ```javascript
 socket.on('connect_error', (error) => {
-  console.error('❌ Customer Socket connection error:', error);
-  console.error('📍 Server URL:', serverUrl);
-  console.error('💡 Troubleshooting: تأكد من أن الخادم يعمل على العنوان المحدد في NEXT_PUBLIC_API_BASE_URL');
 });
 ```
 
@@ -96,15 +92,10 @@ apiClient.interceptors.response.use(
 ```javascript
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('[API Client] Response from:', response.config.url, 'Status:', response.status);
     return response;
   },
   (error: AxiosError) => {
     if (error.code === 'ECONNREFUSED') {
-      console.error('[API Client] 🔴 Connection refused - Server may not be running at:', API_URL);
-    } else if (error.code === 'ENOTFOUND') {
-      console.error('[API Client] 🔴 Cannot resolve hostname:', API_URL);
-    // ... more detailed error handling
     }
     return Promise.reject(error);
   }
