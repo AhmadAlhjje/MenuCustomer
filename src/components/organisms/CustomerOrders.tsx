@@ -27,36 +27,46 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
 
   // Fetch initial orders and join session
   useEffect(() => {
-    const fetchInitialOrders = async () => {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const response = await fetch(`${baseUrl}/api/orders/session/${sessionId}/summary`);
-        const data = await response.json();
+    const fetchInitialOrders = () => {
+      const socket = getSocket();
+      if (!socket) {
+        console.error('[CustomerOrders] Socket not available');
+        return;
+      }
 
-        console.log('[CustomerOrders] Received initial orders:', data);
+      // طلب الطلبات عبر Socket
+      socket.emit('get-customer-orders', sessionId, (response: any) => {
+        console.log('[CustomerOrders] Received initial orders via socket:', response);
 
-        if (data.success && data.data?.orders) {
-          const ordersWithTimer = data.data.orders.map((order: any) => {
-            // Handle both 'items' and 'orderItems' property names
+        if (response.success && response.data?.orders) {
+          const ordersWithTimer = response.data.orders.map((order: any) => {
             const items = order.items || order.orderItems || [];
+
+            // حساب الوقت المتبقي بناءً على الوقت الفعلي
+            let remainingTime = 0;
+            if (order.preparationTime && order.startTime) {
+              const startTime = new Date(order.startTime).getTime();
+              const now = new Date().getTime();
+              const elapsedSeconds = Math.floor((now - startTime) / 1000);
+              remainingTime = Math.max(0, order.preparationTime - elapsedSeconds);
+            }
+
             return {
               ...order,
-              items: items, // Normalize to 'items'
-              preparationTime: items?.[0]?.item?.preparationTime || 0,
-              remainingTime: items?.[0]?.item?.preparationTime || 0,
+              items: items,
+              preparationTime: order.preparationTime || 0,
+              remainingTime: remainingTime,
             };
           });
           console.log('[CustomerOrders] Setting orders:', ordersWithTimer);
           setOrders(ordersWithTimer);
         }
-      } catch (error) {
-        console.error('[CustomerOrders] Error fetching initial orders:', error);
-      }
+      });
     };
 
     if (!isOpen || !sessionId) return;
 
-    // Fetch initial orders
+    // Fetch initial orders via Socket
     fetchInitialOrders();
 
     // Setup socket listeners
@@ -70,10 +80,20 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
     const handleNewOrder = (data: any) => {
       // Add all new orders (regardless of status)
       console.log('[CustomerOrders] New order received:', data);
+
+      // حساب الوقت المتبقي بناءً على الوقت الفعلي
+      let remainingTime = 0;
+      if (data.order.preparationTime && data.order.startTime) {
+        const startTime = new Date(data.order.startTime).getTime();
+        const now = new Date().getTime();
+        const elapsedSeconds = Math.floor((now - startTime) / 1000);
+        remainingTime = Math.max(0, data.order.preparationTime - elapsedSeconds);
+      }
+
       const newOrder: OrderWithTimer = {
         ...data.order,
-        preparationTime: data.order.items?.[0]?.item?.preparationTime || 0,
-        remainingTime: data.order.items?.[0]?.item?.preparationTime || 0,
+        preparationTime: data.order.preparationTime || 0,
+        remainingTime: remainingTime,
       };
       setOrders((prev) => [...prev, newOrder]);
     };
@@ -116,8 +136,9 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
     const interval = setInterval(() => {
       setOrders((prev) =>
         prev.map((order) => {
+          // العداد يعمل في حالتي new و preparing
           if (
-            order.status === 'preparing' &&
+            (order.status === 'preparing' || order.status === 'new') &&
             order.remainingTime !== undefined &&
             order.remainingTime > 0
           ) {
@@ -135,13 +156,13 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'new':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-500 text-white';
       case 'preparing':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-orange-500 text-white';
       case 'delivered':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-500 text-white';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-500 text-white';
     }
   };
 
@@ -175,7 +196,7 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
     <>
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-fadeIn"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-fadeIn"
         onClick={onClose}
       />
 
@@ -183,33 +204,33 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
       <div
         className={`fixed top-0 ${
           language === 'ar' ? 'right-0' : 'left-0'
-        } h-full w-full sm:w-[500px] bg-surface shadow-2xl z-50 flex flex-col animate-slideIn`}
+        } h-full w-full sm:w-[500px] bg-background shadow-2xl z-50 flex flex-col animate-slideIn`}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 flex items-center justify-between">
+        <div className="bg-primary/5 p-6 flex items-center justify-between border-b-2 border-primary/20">
           <div>
-            <h2 className="text-2xl font-bold">{t('order.myOrders') || 'طلباتي'}</h2>
-            <p className="text-blue-50 text-sm mt-1">
-              {orders.length} {orders.length === 1 ? t('order.itemNotes') : t('menu.items')}
+            <h2 className="text-2xl font-bold text-primary">{t('order.myOrders') || 'طلباتي'}</h2>
+            <p className="text-text-light text-sm mt-1">
+              {orders.length} {orders.length === 1 ? 'طلب' : 'طلبات'}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Orders List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {orders.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center px-4">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                 <svg
-                  className="w-12 h-12 text-gray-400"
+                  className="w-12 h-12 text-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -218,34 +239,28 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={1.5}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                   />
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-text mb-2">
                 {t('order.noOrders') || 'لا توجد طلبات'}
               </h3>
-              <p className="text-text-light">{t('order.startOrdering') || 'ابدأ بطلب أصناف'}</p>
+              <p className="text-text-light text-sm">{t('order.startOrdering') || 'ابدأ بطلب الأصناف من القائمة'}</p>
             </div>
           )}
 
           {orders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                className="bg-white rounded-lg border-2 border-primary/20 shadow-sm overflow-hidden"
               >
                 {/* Order Header */}
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="bg-primary/5 p-4 border-b border-primary/10">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-sm font-semibold text-text-light">
-                        #{order.id}
-                      </span>
-                      {order.status === 'preparing' && order.remainingTime !== undefined && (
-                        <div className="mt-1 text-lg font-bold text-yellow-600">
-                          {formatTime(order.remainingTime)}
-                        </div>
-                      )}
+                      <p className="text-sm text-primary/70">رقم الطلب</p>
+                      <p className="text-lg font-bold text-primary">#{order.id}</p>
                     </div>
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(
@@ -258,23 +273,25 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
                 </div>
 
                 {/* Order Items */}
-                <div className="p-4 space-y-2 border-b border-gray-200">
+                <div className="p-4 space-y-2">
                   {order.items?.map((item, index) => (
-                    <div key={index} className="flex justify-between items-start text-sm">
-                      <div className="flex-1">
-                        <p className="font-semibold text-text">
-                          {language === 'ar' ? item.item?.nameAr : item.item?.name}
-                        </p>
-                        <p className="text-text-light text-xs">
-                          {t('order.quantity')}: {item.quantity}
-                        </p>
-                        {item.notes && (
-                          <p className="text-text-muted text-xs mt-1 italic">
-                            &quot;{item.notes}&quot;
+                    <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
+                          <span className="text-white font-bold text-xs">{item.quantity}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-text text-sm">
+                            {language === 'ar' ? item.item?.nameAr : item.item?.name}
                           </p>
-                        )}
+                          {item.notes && (
+                            <p className="text-text-muted text-xs italic">
+                              {item.notes}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <span className="font-bold text-primary ml-2">
+                      <span className="font-bold text-primary text-sm">
                         {formatCurrency(
                           typeof item.subtotal === 'string'
                             ? parseFloat(item.subtotal)
@@ -286,18 +303,35 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
                 </div>
 
                 {/* Timer & Total */}
-                <div className="p-4 space-y-3">
-                  {/* Timer */}
-                  {order.status === 'preparing' && order.remainingTime !== undefined && (
-                    <div className="flex items-center gap-3 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                      <svg className="w-5 h-5 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                <div className="px-4 pb-4 space-y-3 border-t border-primary/10 pt-3">
+                  {/* Timer for new and preparing */}
+                  {(order.status === 'new' || order.status === 'preparing') && order.remainingTime !== undefined && (
+                    <div className={`flex items-center gap-3 p-3 rounded-lg border ${
+                      order.status === 'preparing'
+                        ? 'bg-orange-50 border-orange-300'
+                        : 'bg-blue-50 border-blue-300'
+                    }`}>
+                      <div className={`w-11 h-11 rounded-full flex items-center justify-center ${
+                        order.status === 'preparing'
+                          ? 'bg-orange-500'
+                          : 'bg-blue-500'
+                      }`}>
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
                       <div className="flex-1">
-                        <p className="text-sm text-yellow-800 font-semibold">
-                          {t('order.estimatedTime') || 'الوقت المتبقي'}
+                        <p className={`text-xs font-semibold mb-0.5 ${
+                          order.status === 'preparing' ? 'text-orange-800' : 'text-blue-800'
+                        }`}>
+                          {order.status === 'preparing'
+                            ? 'الوقت المتبقي'
+                            : 'وقت التجهيز'
+                          }
                         </p>
-                        <p className="text-2xl font-bold text-yellow-600">
+                        <p className={`text-2xl font-bold ${
+                          order.status === 'preparing' ? 'text-orange-600' : 'text-blue-600'
+                        }`}>
                           {formatTime(order.remainingTime)}
                         </p>
                       </div>
@@ -305,37 +339,30 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
                   )}
 
                   {order.status === 'delivered' && (
-                    <div className="flex items-center gap-3 bg-green-50 p-3 rounded-lg border border-green-200">
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <p className="text-green-800 font-semibold">
-                        {t('order.ready') || 'جاهز للاستلام'}
-                      </p>
-                    </div>
-                  )}
-
-                  {order.status === 'new' && (
-                    <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-lg border border-blue-200">
-                      <svg className="w-5 h-5 text-blue-600 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      <p className="text-blue-800 font-semibold">
-                        {t('order.processing') || 'قيد المعالجة'}
+                    <div className="flex items-center gap-3 bg-green-50 p-3 rounded-lg border border-green-300">
+                      <div className="w-11 h-11 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <p className="text-green-800 font-bold text-base">
+                        جاهز للاستلام
                       </p>
                     </div>
                   )}
 
                   {/* Total */}
-                  <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                    <span className="text-text font-semibold">{t('order.total')}</span>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-bold text-primary">
-                        {formatCurrency(getTotalPrice(order))}
-                      </span>
-                      <span className="text-sm text-text-light font-semibold">
-                        {t('common.sar')}
-                      </span>
+                  <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
+                    <div className="flex justify-between items-center">
+                      <span className="text-primary font-bold text-base">المجموع</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold text-primary">
+                          {formatCurrency(getTotalPrice(order))}
+                        </span>
+                        <span className="text-sm text-primary font-medium">
+                          ر.س
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
