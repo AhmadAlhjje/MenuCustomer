@@ -360,7 +360,7 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
                           {formatCurrency(getTotalPrice(order))}
                         </span>
                         <span className="text-sm text-primary font-medium">
-                          ر.س
+                          ل.س
                         </span>
                       </div>
                     </div>
