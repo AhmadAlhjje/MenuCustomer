@@ -60,7 +60,7 @@ export default function QRCodePage() {
       const existingSessionData = storage.getSession();
       if (existingSessionData) {
         const sessionAgeHours = storage.getSessionAgeHours();
-        console.log(`[QRCodePage] Existing session found, age: ${sessionAgeHours.toFixed(2)} hours`);
+        console.log(`[QRCodePage] Existing session found, age: ${sessionAgeHours.toFixed(0)} hours`);
 
         if (sessionAgeHours > 10) {
           console.log('[QRCodePage] Session expired (>10 hours), clearing old session');

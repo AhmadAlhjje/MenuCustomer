@@ -38,6 +38,7 @@ export default function MenuPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOrderListOpen, setIsOrderListOpen] = useState(false);
   const [isCustomerOrdersOpen, setIsCustomerOrdersOpen] = useState(false);
+  const [isSendingOrder, setIsSendingOrder] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -107,7 +108,13 @@ export default function MenuPage() {
       return;
     }
 
+    // منع النقر المتكرر
+    if (isSendingOrder) {
+      return;
+    }
+
     try {
+      setIsSendingOrder(true);
       const items = orderItems.map((orderItem) => ({
         itemId: orderItem.item.id,
         quantity: orderItem.quantity,
@@ -124,6 +131,8 @@ export default function MenuPage() {
       success(t('order.orderSuccess'));
     } catch (err: any) {
       showError(err.message || t('order.orderError'));
+    } finally {
+      setIsSendingOrder(false);
     }
   };
 
@@ -266,6 +275,7 @@ export default function MenuPage() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onSendToKitchen={handleSendToKitchen}
+        isSending={isSendingOrder}
       />
 
       {/* Customer Orders */}

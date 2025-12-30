@@ -15,6 +15,7 @@ interface OrderListProps {
   onSendToKitchen: () => void;
   isOpen: boolean;
   onClose: () => void;
+  isSending?: boolean;
 }
 
 const getItemImages = (item: MenuItem): string[] => {
@@ -54,6 +55,7 @@ export const OrderList: React.FC<OrderListProps> = ({
   onSendToKitchen,
   isOpen,
   onClose,
+  isSending = false,
 }) => {
   const { t, language } = useI18n();
 
@@ -240,11 +242,12 @@ export const OrderList: React.FC<OrderListProps> = ({
               onClick={onSendToKitchen}
               fullWidth
               className="shadow-lg"
+              loading={isSending}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
-              <span>{t('order.sendToKitchen')}</span>
+              <span>{isSending ? t('order.sending') : t('order.sendToKitchen')}</span>
             </Button>
           </div>
         )}
