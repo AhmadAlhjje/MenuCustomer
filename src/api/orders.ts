@@ -8,21 +8,28 @@ export const ordersApi = {
     const socket = initializeSocket();
 
     return new Promise((resolve, reject) => {
+      let isResolved = false;
+
       // Emit order via socket
       socket.emit('create-order', data, (response: any) => {
+        if (isResolved) return; // تجاهل الاستجابة إذا تم حل الـ Promise بالفعل
+        isResolved = true;
+
         console.log('Create Order Socket Response:', response);
 
-        if (response.success) {
+        if (response && response.success && response.data) {
           resolve(response.data);
         } else {
-          reject(new Error(response.message || 'فشل إرسال الطلب'));
+          reject(new Error(response?.message || 'فشل إرسال الطلب'));
         }
       });
 
-      // Timeout after 10 seconds
+      // Timeout after 30 seconds (زيادة المهلة للشبكات الضعيفة)
       setTimeout(() => {
-        reject(new Error('انتهت مهلة إرسال الطلب'));
-      }, 10000);
+        if (isResolved) return; // لا ترفض إذا تمت الاستجابة بالفعل
+        isResolved = true;
+        reject(new Error('انتهت مهلة إرسال الطلب. يرجى التحقق من اتصال الإنترنت'));
+      }, 30000);
     });
   },
 

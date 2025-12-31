@@ -186,16 +186,26 @@ export default function MenuPage() {
         notes: orderItem.notes || '',
       }));
 
-      await ordersApi.createOrder({
+      // انتظار نجاح الإرسال قبل تنظيف السلة
+      const response = await ordersApi.createOrder({
         sessionId: typeof sessionId === 'string' ? parseInt(sessionId, 10) : sessionId,
         items: items,
       });
 
-      dispatch(clearOrder());
-      setIsOrderListOpen(false);
-      success(t('order.orderSuccess'));
+      // التأكد من نجاح الطلب
+      if (response && response.id) {
+        // فقط بعد التأكد من النجاح، قم بتنظيف السلة وعرض رسالة النجاح
+        dispatch(clearOrder());
+        setIsOrderListOpen(false);
+        success(t('order.orderSuccess'));
+        console.log('[MenuPage] Order sent successfully:', response);
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (err: any) {
+      console.error('[MenuPage] Error sending order:', err);
       showError(err.message || t('order.orderError'));
+      // لا تنظف السلة في حالة الفشل - يبقى الطلب موجوداً
     } finally {
       setIsSendingOrder(false);
     }
