@@ -25,6 +25,42 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
   const { t, language } = useI18n();
   const [orders, setOrders] = useState<OrderWithTimer[]>([]);
 
+  // Play notification sound
+  const playNotificationSound = () => {
+    try {
+      // Create audio context for bell sound
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+      // Bell sound - multiple tones for a pleasant notification
+      const playTone = (frequency: number, startTime: number, duration: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.3, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
+
+      const now = audioContext.currentTime;
+      // Play bell-like tones (E6, B5, E6)
+      playTone(1318.51, now, 0.3); // E6
+      playTone(987.77, now + 0.15, 0.3); // B5
+      playTone(1318.51, now + 0.3, 0.4); // E6
+
+      console.log('[CustomerOrders] Notification sound played');
+    } catch (error) {
+      console.error('[CustomerOrders] Error playing notification sound:', error);
+    }
+  };
+
   // Fetch initial orders and join session
   useEffect(() => {
     const fetchInitialOrders = () => {
@@ -101,6 +137,13 @@ export const CustomerOrders: React.FC<CustomerOrdersProps> = ({
     const handleOrderStatusUpdate = (data: any) => {
       // Update order status
       console.log('[CustomerOrders] Order status updated:', data);
+
+      // Play notification sound when order becomes delivered
+      if (data.order.status === 'delivered') {
+        playNotificationSound();
+        console.log('[CustomerOrders] Order is ready for pickup! Playing notification sound.');
+      }
+
       setOrders((prev) => {
         const exists = prev.find((order) => order.id === data.order.id);
         if (exists) {
