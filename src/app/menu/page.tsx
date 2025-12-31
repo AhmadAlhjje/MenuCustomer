@@ -18,6 +18,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { addToOrder, updateOrderItemQuantity, removeFromOrder, clearOrder } from '@/store/slices/orderSlice';
 import { clearSession } from '@/store/slices/sessionSlice';
 import { storage } from '@/utils/storage';
+import { getSocket } from '@/lib/socket';
 
 export default function MenuPage() {
   const router = useRouter();
@@ -40,6 +41,39 @@ export default function MenuPage() {
   const [isCustomerOrdersOpen, setIsCustomerOrdersOpen] = useState(false);
   const [isSendingOrder, setIsSendingOrder] = useState(false);
 
+  // Play notification sound function
+  const playNotificationSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+      const playTone = (frequency: number, startTime: number, duration: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+
+        gainNode.gain.setValueAtTime(0.3, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
+
+      const now = audioContext.currentTime;
+      playTone(1318.51, now, 0.3); // E6
+      playTone(987.77, now + 0.15, 0.3); // B5
+      playTone(1318.51, now + 0.3, 0.4); // E6
+
+      console.log('[MenuPage] Notification sound played - Order is ready!');
+    } catch (error) {
+      console.error('[MenuPage] Error playing notification sound:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -61,6 +95,37 @@ export default function MenuPage() {
       fetchData();
     }
   }, [sessionId]);
+
+  // Socket.IO listener for order status updates - always active
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    // Join customer session room
+    socket.emit('join-customer-session', sessionId);
+    console.log('[MenuPage] Joined customer session for notifications:', sessionId);
+
+    const handleOrderStatusUpdate = (data: any) => {
+      console.log('[MenuPage] Order status updated:', data);
+
+      // Play notification sound when order becomes delivered
+      if (data.order.status === 'delivered') {
+        playNotificationSound();
+        success(t('order.ready') || 'طلبك جاهز للاستلام! 🎉');
+        console.log('[MenuPage] Order is ready! Playing notification sound.');
+      }
+    };
+
+    socket.on('customer-order-status-updated', handleOrderStatusUpdate);
+
+    return () => {
+      socket.off('customer-order-status-updated', handleOrderStatusUpdate);
+      socket.emit('leave-customer-session', sessionId);
+      console.log('[MenuPage] Left customer session:', sessionId);
+    };
+  }, [sessionId, t, success]);
 
   useEffect(() => {
     let filtered = items;
