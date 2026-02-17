@@ -1,11 +1,11 @@
 import apiClient from './client';
 import { CreateOrderRequest, CreateOrderResponse, Order } from './types';
-import { initializeSocket } from '@/lib/socket';
+import { initializeSocket, getSocket } from '@/lib/socket';
 
 export const ordersApi = {
   createOrder: async (data: CreateOrderRequest): Promise<Order> => {
-    // Use Socket.IO to send order instead of HTTP
-    const socket = initializeSocket();
+    // استخدام الاتصال الموجود مسبقاً، أو تهيئة جديد كاحتياط
+    const socket = getSocket() || initializeSocket();
 
     return new Promise((resolve, reject) => {
       let isResolved = false;

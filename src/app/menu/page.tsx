@@ -18,7 +18,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { addToOrder, updateOrderItemQuantity, removeFromOrder, clearOrder } from '@/store/slices/orderSlice';
 import { clearSession } from '@/store/slices/sessionSlice';
 import { storage } from '@/utils/storage';
-import { getSocket } from '@/lib/socket';
+import { initializeSocket, getSocket, disconnectSocket } from '@/lib/socket';
 
 export default function MenuPage() {
   const router = useRouter();
@@ -73,6 +73,17 @@ export default function MenuPage() {
       console.error('[MenuPage] Error playing notification sound:', error);
     }
   };
+
+  // تهيئة Socket فوراً عند الدخول للصفحة لتسريع إرسال الطلبات
+  useEffect(() => {
+    if (!sessionId) return;
+    const socket = initializeSocket();
+    console.log('[MenuPage] Socket initialized on page load');
+
+    return () => {
+      disconnectSocket();
+    };
+  }, [sessionId]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -285,11 +296,10 @@ export default function MenuPage() {
           <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`px-6 py-2.5 rounded-xl font-semibold whitespace-nowrap transition-all duration-200 ${
-                selectedCategory === null
+              className={`px-6 py-2.5 rounded-xl font-semibold whitespace-nowrap transition-all duration-200 ${selectedCategory === null
                   ? 'bg-primary text-white shadow-medium'
                   : 'bg-surface text-text-light hover:bg-primary-50 hover:text-primary border border-border'
-              }`}
+                }`}
             >
               {t('menu.allCategories')}
             </button>
@@ -297,11 +307,10 @@ export default function MenuPage() {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-2.5 rounded-xl font-semibold whitespace-nowrap transition-all duration-200 ${
-                  selectedCategory === category.id
+                className={`px-6 py-2.5 rounded-xl font-semibold whitespace-nowrap transition-all duration-200 ${selectedCategory === category.id
                     ? 'bg-primary text-white shadow-medium'
                     : 'bg-surface text-text-light hover:bg-primary-50 hover:text-primary border border-border'
-                }`}
+                  }`}
               >
                 {language === 'ar' ? category.nameAr : category.name}
               </button>
